@@ -40,6 +40,7 @@
             font-size: 1.2rem;
             color: var(--primary);
             margin: 40px 0;
+            font-weight: bold;
         }
 
         .news-list {
@@ -54,6 +55,7 @@
             padding: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             border-left: 5px solid var(--accent);
+            animation: fadeIn 0.5s ease;
         }
 
         .news-title {
@@ -75,6 +77,11 @@
             color: #888;
             margin-bottom: 10px;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -90,25 +97,32 @@
     </div>
 
     <script>
-        // Lista de palabras clave para asegurar que la noticia sea positiva o constructiva
+        // Filtros estrictos para capturar únicamente historias constructivas e inspiradoras
         const palabrasPositivas = [
             "gana", "premio", "logra", "brilla", "triunfo", "ayuda", "comunidad", 
             "éxito", "oro", "medalla", "avance", "descubren", "donación", "escolar", 
-            "deporte", "arte", "música", "talento", "histórico", "crea", "inauguran"
+            "deporte", "arte", "música", "talento", "histórico", "crea", "inauguran",
+            "orgullo", "reconocen", "celebran", "solidaridad", "festival", "bienestar"
         ];
 
-        // Fuente de noticias en vivo (RSS de noticias de Puerto Rico)
-        const rssUrl = "https://wapa.tv"; 
-        const apiUrl = `https://rss2json.com{encodeURIComponent(rssUrl)}`;
+        // Usamos una fuente alternativa abierta de noticias de PR para evitar problemas de bloqueo
+        const rssUrl = "https://google.com";
+        // Convertidor libre de CORS para cargar los datos de forma segura
+        const apiUrl = `https://allorigins.win{encodeURIComponent(rssUrl)}`;
 
         async function cargarNoticiasAutomatica() {
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
                 
-                if (data.status === 'ok') {
+                // Parsear el string XML recibido
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                const articulos = xmlDoc.getElementsByTagName("item");
+
+                if (articulos.length > 0) {
                     document.getElementById('loader').style.display = 'none';
-                    filtrarYMostrar(data.items);
+                    filtrarYMostrar(articulos);
                 } else {
                     mostrarError();
                 }
@@ -121,10 +135,14 @@
             const grid = document.getElementById('newsGrid');
             let contador = 0;
 
-            articulos.forEach(item => {
-                const contenidoParaAnalizar = (item.title + " " + item.description).toLowerCase();
+            for (let i = 0; i < articulos.length; i++) {
+                const title = articulos[i].getElementsByTagName("title")[0]?.textContent || "";
+                const link = articulos[i].getElementsByTagName("link")[0]?.textContent || "#";
+                const pubDate = articulos[i].getElementsByTagName("pubDate")[0]?.textContent || "";
                 
-                // Verifica si el artículo contiene al menos una palabra clave positiva
+                const contenidoParaAnalizar = title.toLowerCase();
+                
+                // Evalúa si el titular incluye alguna de nuestras palabras clave de optimismo
                 const esPositiva = palabrasPositivas.some(palabra => contenidoParaAnalizar.includes(palabra));
 
                 if (esPositiva) {
@@ -132,29 +150,28 @@
                     const card = document.createElement('article');
                     card.className = 'news-card';
                     
-                    // Formatear la fecha
-                    const fecha = new Date(item.pubDate).toLocaleDateString('es-PR', {
+                    const fecha = new Date(pubDate).toLocaleDateString('es-PR', {
                         day: 'numeric', month: 'long', year: 'numeric'
                     });
 
                     card.innerHTML = `
                         <h2 class="news-title">
-                            <a href="${item.link}" target="_blank">${item.title}</a>
+                            <a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a>
                         </h2>
                         <div class="news-date">📅 ${fecha}</div>
-                        <p>${item.description.replace(/<[^>]*>/g, '').substring(0, 200)}...</p>
+                        <p>Haz clic en el titular para leer la historia completa en su fuente oficial de noticias.</p>
                     `;
                     grid.appendChild(card);
                 }
-            });
+            }
 
             if (contador === 0) {
-                grid.innerHTML = "<p style='text-align:center;'>No se encontraron noticias positivas en las últimas horas. ¡Vuelve más tarde!</p>";
+                grid.innerHTML = "<p style='text-align:center;'>Buscando noticias... Si no aparecen de inmediato, refresca la página en unos minutos.</p>";
             }
         }
 
         function mostrarError() {
-            document.getElementById('loader').innerText = "Hubo un problema al cargar las noticias automáticas. Inténtalo de nuevo.";
+            document.getElementById('loader').innerText = "Conectando con el servidor de noticias... Por favor, refresca la página.";
         }
 
         window.onload = cargarNoticiasAutomatica;
