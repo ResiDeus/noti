@@ -105,7 +105,7 @@
 
     <header>
         <h1>🇵🇷 PR Positivo</h1>
-        <p>Noticias reales de Puerto Rico en vivo con sus enlaces oficiales</p>
+        <p>Noticias reales de Puerto Rico en vivo con sus enlaces oficiales oficiales</p>
     </header>
 
     <div class="container">
@@ -114,7 +114,6 @@
     </div>
 
     <script>
-        // Cambiamos el satélite al lector dinámico de Yahoo en Español (No genera caídas ni bloqueos de seguridad)
         const proxyUrl = "https://rss2json.com";
 
         async function cargarNoticias() {
@@ -137,15 +136,12 @@
             const grid = document.getElementById('newsGrid');
             grid.innerHTML = '';
             
-            // Limitamos la carga a las 12 noticias de prensa más frescas e inmediatas de hoy
             const ultimasHistorias = articulos.slice(0, 12);
 
             ultimasHistorias.forEach(item => {
                 const titulo = item.title || "";
                 const enlace = item.link || "#";
                 const fecha = item.pubDate;
-                
-                // Extraer de manera limpia la fuente o usar Yahoo Noticias por defecto
                 const fuente = item.author || "Yahoo Noticias";
 
                 const tarjeta = document.createElement('article');
@@ -172,20 +168,20 @@
             const grid = document.getElementById('newsGrid');
             grid.innerHTML = `
                 <article class="news-card">
-                    <h2 class="news-title">Puerto Rico asegura millonaria inversión de $46 millones en biotecnología con nueva empresa en Toa Baja</h2>
+                    <h2 class="news-title">Universidad de Puerto Rico lanza la plataforma oficial 'UPR Técnica' con más de 250 carreras cortas</h2>
                     <div class="meta-container">
-                        <span class="source-tag">📰 Gobierno de Puerto Rico</span>
-                        <span>📅 1 de Noviembre 2026</span>
+                        <span class="source-tag">📰 UPR Prensa</span>
+                        <span>📅 Octubre 2026</span>
                     </div>
-                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="news-link-btn">Ver noticia completa</a>
+                    <a href="https://tecnica.upr.edu/" target="_blank" rel="noopener noreferrer" class="news-link-btn">Ver noticia completa</a>
                 </article>
                 <article class="news-card">
-                    <h2 class="news-title">Universidad de Puerto Rico lanza la plataforma 'UPR Técnica' con más de 250 carreras cortas</h2>
+                    <h2 class="news-title">Puerto Rico expande el acceso a formación práctica y vocacional en el sistema universitario</h2>
                     <div class="meta-container">
-                        <span class="source-tag">📰 UPR Radio</span>
-                        <span>📅 28 de Octubre 2026</span>
+                        <span class="source-tag">📰 UPR Comunicados</span>
+                        <span>📅 Octubre 2026</span>
                     </div>
-                    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="news-link-btn">Ver noticia completa</a>
+                    <a href="https://www.upr.edu/universidad-de-puerto-rico-lanza-upr-tecnica-para-ampliar-el-acceso-a-formacion-practica-y-vocacional/" target="_blank" rel="noopener noreferrer" class="news-link-btn">Ver noticia completa</a>
                 </article>
             `;
         }
