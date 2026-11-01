@@ -91,15 +91,7 @@
     </div>
 
     <script>
-        // Filtros para asegurar que solo aparezcan historias de progreso, éxitos y comunidad
-        const palabrasBuenas = [
-            "gana", "premio", "logra", "brilla", "triunfo", "ayuda", "comunidad", 
-            "éxito", "oro", "medalla", "avance", "donación", "escolar", "turismo",
-            "deporte", "arte", "música", "talento", "histórico", "crea", "inauguran",
-            "orgullo", "reconocen", "celebran", "solidaridad", "festival", "bienestar"
-        ];
-
-        // Lector directo sin intermediarios conflictivos
+        // Lector directo de Google News para Puerto Rico (Filtrado amplio sin bloqueos)
         const proxyUrl = "https://feedby.design";
 
         async function cargarNoticias() {
@@ -121,61 +113,39 @@
         function mostrarEnPantalla(articulos) {
             const grid = document.getElementById('newsGrid');
             grid.innerHTML = '';
-            let contador = 0;
 
-            articulos.forEach(item => {
+            // Muestra los primeros 15 titulares más recientes del satélite de prensa
+            const limiteArticulos = articles = articles = articulos.slice(0, 15);
+
+            limiteArticulos.forEach(item => {
                 const titulo = item.title;
                 const enlace = item.link;
                 const fecha = item.pubDate || item.date_published;
-                const minuscula = titulo.toLowerCase();
 
-                const esBuenaNoticia = palabrasBuenas.some(p => minuscula.includes(p));
+                const tarjeta = document.createElement('article');
+                tarjeta.className = 'news-card';
+                
+                const fechaTxt = fecha ? new Date(fecha).toLocaleDateString('es-PR', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                }) : "Reciente";
 
-                if (esBuenaNoticia) {
-                    contador++;
-                    const tarjeta = document.createElement('article');
-                    tarjeta.className = 'news-card';
-                    
-                    const fechaTxt = fecha ? new Date(fecha).toLocaleDateString('es-PR', {
-                        day: 'numeric', month: 'long', year: 'numeric'
-                    }) : "Reciente";
-
-                    tarjeta.innerHTML = `
-                        <h2 class="news-title">
-                            <a href="${enlace}" target="_blank" rel="noopener noreferrer">${titulo}</a>
-                        </h2>
-                        <div class="news-date">📅 Publicado: ${fechaTxt}</div>
-                    `;
-                    grid.appendChild(tarjeta);
-                }
+                tarjeta.innerHTML = `
+                    <h2 class="news-title">
+                        <a href="${enlace}" target="_blank" rel="noopener noreferrer">${titulo}</a>
+                    </h2>
+                    <div class="news-date">📅 Actualizado: ${fechaTxt}</div>
+                    <p>Haz clic en este titular para abrir el reporte completo de la isla.</p>
+                `;
+                grid.appendChild(tarjeta);
             });
-
-            if (contador === 0) {
-                grid.innerHTML = "<p style='text-align:center;'>No se encontraron titulares optimistas en este instante. Refresca más tarde.</p>";
-            }
         }
 
         function errorPantalla() {
-            // En caso de retraso extremo de red, muestra directamente las noticias reales recopiladas de esta semana
-            document.getElementById('loader').style.display = 'none';
-            const grid = document.getElementById('newsGrid');
-            grid.innerHTML = `
-                <article class="news-card">
-                    <h2 class="news-title">Puerto Rico brilla en el Tour NORCECA de Voleibol de Playa logrando doble medalla</h2>
-                    <div class="news-date">📅 Publicado: Noviembre 2026</div>
-                </article>
-                <article class="news-card">
-                    <h2 class="news-title">Discover Puerto Rico anuncia cifra récord de $1,600 millones en ingresos por turismo e impulso al empleo local</h2>
-                    <div class="news-date">📅 Publicado: Octubre 2026</div>
-                </article>
-                <article class="news-card">
-                    <h2 class="news-title">La paraatleta boricua Yaimillie Díaz Colón gana dos medallas de oro en el Grand Prix internacional</h2>
-                    <div class="news-date">📅 Publicado: Octubre 2026</div>
-                </article>
-            `;
+            document.getElementById('loader').innerText = "Conectando al servidor general de prensa... Por favor, refresca la página.";
         }
 
         window.onload = cargarNoticias;
     </script>
+
 </body>
 </html>
