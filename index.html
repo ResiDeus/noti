@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PR Positivo - Noticias Automáticas</title>
+    <style>
+        :root {
+            --primary: #002f6c;
+            --secondary: #ce1126;
+            --accent: #2ecc71;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--secondary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .loader {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin: 40px 0;
+        }
+
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .news-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--accent);
+        }
+
+        .news-title {
+            margin: 0 0 10px 0;
+            color: var(--primary);
+        }
+
+        .news-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .news-title a:hover {
+            text-decoration: underline;
+        }
+
+        .news-date {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🇵🇷 PR Positivo en Vivo</h1>
+        <p>Noticias de Puerto Rico filtradas automáticamente para mostrar solo lo bueno</p>
+    </header>
+
+    <div class="container">
+        <div id="loader" class="loader">Buscando buenas noticias en tiempo real...</div>
+        <main class="news-list" id="newsGrid"></main>
+    </div>
+
+    <script>
+        // Lista de palabras clave para asegurar que la noticia sea positiva o constructiva
+        const palabrasPositivas = [
+            "gana", "premio", "logra", "brilla", "triunfo", "ayuda", "comunidad", 
+            "éxito", "oro", "medalla", "avance", "descubren", "donación", "escolar", 
+            "deporte", "arte", "música", "talento", "histórico", "crea", "inauguran"
+        ];
+
+        // Fuente de noticias en vivo (RSS de noticias de Puerto Rico)
+        const rssUrl = "https://wapa.tv"; 
+        const apiUrl = `https://rss2json.com{encodeURIComponent(rssUrl)}`;
+
+        async function cargarNoticiasAutomatica() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    document.getElementById('loader').style.display = 'none';
+                    filtrarYMostrar(data.items);
+                } else {
+                    mostrarError();
+                }
+            } catch (error) {
+                mostrarError();
+            }
+        }
+
+        function filtrarYMostrar(articulos) {
+            const grid = document.getElementById('newsGrid');
+            let contador = 0;
+
+            articulos.forEach(item => {
+                const contenidoParaAnalizar = (item.title + " " + item.description).toLowerCase();
+                
+                // Verifica si el artículo contiene al menos una palabra clave positiva
+                const esPositiva = palabrasPositivas.some(palabra => contenidoParaAnalizar.includes(palabra));
+
+                if (esPositiva) {
+                    contador++;
+                    const card = document.createElement('article');
+                    card.className = 'news-card';
+                    
+                    // Formatear la fecha
+                    const fecha = new Date(item.pubDate).toLocaleDateString('es-PR', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+
+                    card.innerHTML = `
+                        <h2 class="news-title">
+                            <a href="${item.link}" target="_blank">${item.title}</a>
+                        </h2>
+                        <div class="news-date">📅 ${fecha}</div>
+                        <p>${item.description.replace(/<[^>]*>/g, '').substring(0, 200)}...</p>
+                    `;
+                    grid.appendChild(card);
+                }
+            });
+
+            if (contador === 0) {
+                grid.innerHTML = "<p style='text-align:center;'>No se encontraron noticias positivas en las últimas horas. ¡Vuelve más tarde!</p>";
+            }
+        }
+
+        function mostrarError() {
+            document.getElementById('loader').innerText = "Hubo un problema al cargar las noticias automáticas. Inténtalo de nuevo.";
+        }
+
+        window.onload = cargarNoticiasAutomatica;
+    </script>
+</body>
+</html>
