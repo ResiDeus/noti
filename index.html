@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PR Positivo - Noticias Automáticas Estables</title>
+    <title>PR Positivo - Noticias en Vivo</title>
     <style>
         :root {
             --primary: #002f6c;
@@ -24,7 +24,7 @@
         header {
             background-color: var(--primary);
             color: white;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
             border-bottom: 5px solid var(--secondary);
         }
@@ -60,6 +60,7 @@
         .news-title {
             margin: 0 0 10px 0;
             color: var(--primary);
+            font-size: 1.4rem;
         }
 
         .news-title a {
@@ -74,115 +75,93 @@
         .news-date {
             font-size: 0.85rem;
             color: #888;
-            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🇵🇷 PR Positivo en Vivo</h1>
-        <p>Noticias de Puerto Rico filtradas automáticamente para mostrar solo lo bueno</p>
+        <h1>🇵🇷 PR Positivo</h1>
+        <p>Titulares reales de Puerto Rico filtrados de forma automática</p>
     </header>
 
     <div class="container">
-        <div id="loader" class="loader">Buscando buenas noticias en tiempo real...</div>
+        <div id="loader" class="loader">Buscando historias positivas de la isla...</div>
         <main class="news-list" id="newsGrid"></main>
     </div>
 
     <script>
-        const palabrasPositivas = [
+        // Filtros estrictos para capturar solo lo alegre e inspirador
+        const palabrasBuenas = [
             "gana", "premio", "logra", "brilla", "triunfo", "ayuda", "comunidad", 
-            "éxito", "oro", "medalla", "avance", "descubren", "donación", "escolar", 
+            "éxito", "oro", "medalla", "avance", "donación", "escolar", "turismo",
             "deporte", "arte", "música", "talento", "histórico", "crea", "inauguran",
             "orgullo", "reconocen", "celebran", "solidaridad", "festival", "bienestar"
         ];
 
-        // Noticias de respaldo en caso de que falle la red o no haya noticias positivas hoy
-        const noticiasRespaldo = [
-            { title: "¡Orgullo Boricua! Jóvenes puertorriqueños ganan competencia de robótica internacional", pubDate: new Date().toISOString() },
-            { title: "Comunidades en Puerto Rico inauguran un nuevo sistema de energía solar vecinal autosuficiente", pubDate: new Date().toISOString() },
-            { title: "Atletas de la isla rompen récords históricos asegurando nuevas clasificaciones mundiales", pubDate: new Date().toISOString() }
-        ];
+        // Lector universal de noticias de Google News (Evita bloqueos de seguridad del navegador)
+        const googleNewsUrl = "https://google.com";
+        const proxyUrl = `https://rss2json.com{encodeURIComponent(googleNewsUrl)}&api_key=4xb6v8o8z606rbtuolb4qg9n8mclofhpx3fmxp5k`;
 
-        const rssUrl = "https://google.com";
-        // Cambiamos a corsproxy.io que es una infraestructura mucho más rápida y estable
-        const apiUrl = `https://corsproxy.io{encodeURIComponent(rssUrl)}`;
-
-        async function cargarNoticiasAutomatica() {
+        async function cargarNoticias() {
             try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error("Error de red");
+                const respuesta = await fetch(proxyUrl);
+                const datos = await respuesta.json();
                 
-                const textData = await response.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(textData, "text/xml");
-                const articulos = xmlDoc.getElementsByTagName("item");
-
-                if (articulos.length > 0) {
+                if (datos.status === 'ok' && datos.items.length > 0) {
                     document.getElementById('loader').style.display = 'none';
-                    filtrarYMostrar(articulos, false);
+                    mostrarEnPantalla(datos.items);
                 } else {
-                    cargarSistemaRespaldo();
+                    errorPantalla();
                 }
-            } catch (error) {
-                console.log("Servidor proxy ocupado, activando noticias de respaldo.");
-                cargarSistemaRespaldo();
+            } catch (e) {
+                errorPantalla();
             }
         }
 
-        function cargarSistemaRespaldo() {
-            document.getElementById('loader').style.display = 'none';
-            filtrarYMostrar(noticiasRespaldo, true);
-        }
-
-        function filtrarYMostrar(articulos, esRespaldo) {
+        function mostrarEnPantalla(articulos) {
             const grid = document.getElementById('newsGrid');
             grid.innerHTML = '';
             let contador = 0;
 
-            for (let i = 0; i < articulos.length; i++) {
-                let title, link, pubDate;
+            articulos.forEach(item => {
+                const titulo = item.title;
+                const enlace = item.link;
+                const fecha = item.pubDate;
+                const minuscula = titulo.toLowerCase();
 
-                if (esRespaldo) {
-                    title = articulos[i].title;
-                    link = "https://news.google.com";
-                    pubDate = articulos[i].pubDate;
-                } else {
-                    title = articulos[i].getElementsByTagName("title")[0]?.textContent || "";
-                    link = articulos[i].getElementsByTagName("link")[0]?.textContent || "#";
-                    pubDate = articulos[i].getElementsByTagName("pubDate")[0]?.textContent || "";
-                }
-                
-                const contenidoParaAnalizar = title.toLowerCase();
-                const esPositiva = palabrasPositivas.some(palabra => contenidoParaAnalizar.includes(palabra)) || esRespaldo;
+                // Analizar si el titular de prensa es positivo
+                const esBuenaNoticia = palabrasBuenas.some(p => minuscula.includes(p));
 
-                if (esPositiva) {
+                if (esBuenaNoticia) {
                     contador++;
-                    const card = document.createElement('article');
-                    card.className = 'news-card';
+                    const tarjeta = document.createElement('article');
+                    tarjeta.className = 'news-card';
                     
-                    const fecha = new Date(pubDate).toLocaleDateString('es-PR', {
+                    const fechaTxt = new Date(fecha).toLocaleDateString('es-PR', {
                         day: 'numeric', month: 'long', year: 'numeric'
                     });
 
-                    card.innerHTML = `
+                    tarjeta.innerHTML = `
                         <h2 class="news-title">
-                            <a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a>
+                            <a href="${enlace}" target="_blank" rel="noopener noreferrer">${titulo}</a>
                         </h2>
-                        <div class="news-date">📅 ${fecha} ${esRespaldo ? ' (Historias Inspiradoras de Archivo)' : ''}</div>
-                        <p>Haz clic en el titular para leer la historia completa en su fuente oficial de noticias.</p>
+                        <div class="news-date">📅 Publicado: ${fechaTxt}</div>
                     `;
-                    grid.appendChild(card);
+                    grid.appendChild(tarjeta);
                 }
-            }
+            });
 
             if (contador === 0) {
-                cargarSistemaRespaldo();
+                grid.innerHTML = "<p style='text-align:center;'>Buscando noticias... Intenta recargar la página en unos minutos.</p>";
             }
         }
 
-        window.onload = cargarNoticiasAutomatica;
+        function errorPantalla() {
+            document.getElementById('loader').innerText = "Cargando titulares del satélite... Por favor refresca la página.";
+        }
+
+        window.onload = cargarNoticias;
     </script>
 </body>
 </html>
